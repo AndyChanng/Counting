@@ -3,7 +3,7 @@ download models at https://pan.baidu.com/s/1WWrE8z1290H7zO2O8EGNdw
 
 在 test.py 中 data_path 处添加数据集路径
 
-score 为模型结果，模型存储于 model_save_path 文件夹中。
+score 为模型名称，模型存储于 model_save_path 文件夹中。
 
 运行：
 
