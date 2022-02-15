@@ -125,17 +125,4 @@ print('{}: mae {:.1f}, mse {:.1f}\n'.format(model_path, mae, mse))
 os.rename(os.path.join(args.pred_density_map_path) ,
                         os.path.join('output/{}/{:.1f}_{:.1f}_{}'.format(dataset_name, mae,mse,remarks)))
 
-
-# Counting
-
-"""在 test.py 中 data_path 处添加数据集路径
-
-score 为模型结果，模型存储于 model_save_path 文件夹中。
-
-运行：
-python test.py 
-
-最终生成结果将在output文件夹对应的数据集名的文件夹下，
-
-其中，den文件夹内为最终预测图P；f为加权后的前景图F；map为初始预测图E；mask为前景掩膜M。"""
             
