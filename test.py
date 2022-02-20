@@ -1,6 +1,3 @@
-# 用 MAE和MSE 得分为score的model来测试，然后输出fpn map和final map,和所有前背景误差
-
-
 import argparse
 import torch
 import os
@@ -14,8 +11,8 @@ warnings.filterwarnings("ignore")
 from two_branch import vgg19
 
 
-dataset_name='qnrf'
-score = '81.8_143.8'
+dataset_name='jhu'
+score = ''
 remarks = ''
 
 
@@ -55,7 +52,7 @@ model_path = args.model_path
 if args.dataset.lower() == 'qnrf':
     crop_size = 512
     data_path = '/home/zhangy/datasets/QNRF/QNRF-Train-Val-Test'  # UCF-QNRF path
-    dataset = crowd.Crowd_qnrf(os.path.join(data_path, 'val'), crop_size, 8, method='val')
+    dataset = crowd.Crowd_qnrf(os.path.join(data_path, 'test'), crop_size, 8, method='val')
 elif args.dataset.lower() == 'sha' :
     crop_size = 256
     data_path = '/home/zhangy/datasets/Shanghai/part_A_final'  # Shanghai A path
@@ -67,7 +64,7 @@ elif args.dataset.lower() == 'shb':
 elif args.dataset.lower() == 'jhu':
     crop_size = 512
     data_path = '/home/zhangy/datasets/jhu/Train-Val-Test'  # jhu-crowd++ path
-    dataset = crowd.Crowd_qnrf(os.path.join(data_path, 'val'), crop_size, 8, method='val')    
+    dataset = crowd.Crowd_qnrf(os.path.join(data_path, 'test'), crop_size, 8, method='val')    
 else:
     raise NotImplementedError
 dataloader = torch.utils.data.DataLoader(dataset, 1, shuffle=False, num_workers=1, pin_memory=True)
@@ -89,11 +86,10 @@ for inputs,count, name in dataloader:
 
     with torch.set_grad_enabled(False):
         x_map, x_mask= model(inputs)
-    
+        
         print(name)
         
         img_visible(os.path.join(args.pred_density_map_path,'mask'),x_mask,name)
-        print('mask = ',torch.sum(x_mask).item())
         
         img_visible(os.path.join(args.pred_density_map_path,'map'),x_map,name)
         img_visible(os.path.join(args.pred_density_map_path,'f'),x_map*x_map,name)
