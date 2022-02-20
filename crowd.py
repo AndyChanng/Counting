@@ -11,7 +11,6 @@ import numpy as np
 import scipy.io as io
 import cv2
 import math
-rate = 0
 def random_crop(im_h, im_w, crop_h, crop_w):
     res_h = im_h - crop_h
     res_w = im_w - crop_w
@@ -35,29 +34,7 @@ def gen_discrete_map(im_height, im_width, points):
         discrete_map[p[0], p[1]] += 1
     assert np.sum(discrete_map) == num_gt
     return discrete_map
-def gen_mask (gt,rate):
-    mask = np.zeros(gt.shape, dtype=np.float32)
-    gt_count = np.count_nonzero(gt)
-    if gt_count == 0:
-        return mask
 
-    pts = np.array(list(zip(np.nonzero(gt)[0], np.nonzero(gt)[1])))
-    for i, pt in enumerate(pts):
-        pt2d = np.zeros(gt.shape, dtype=np.float32)
-        wt = min(rate,gt.shape[0]-pt[0]-1,gt.shape[1]-pt[1]-1)
-        for i in range(0,wt+1):
-            pt2d[pt[0]-i, pt[1]] = 1
-            pt2d[pt[0]+i, pt[1]] = 1
-            pt2d[pt[0], pt[1]-i] = 1
-            pt2d[pt[0], pt[1]+i] = 1
-            pt2d[pt[0]-i, pt[1]-i] = 1
-            pt2d[pt[0]+i, pt[1]+i] = 1
-            pt2d[pt[0]+i, pt[1]-i] = 1
-            pt2d[pt[0]-i, pt[1]+i] = 1
-
-        mask += pt2d
-
-    return mask
 
 class Base(data.Dataset):
     def __init__(self, root_path, crop_size, downsample_ratio=8):
@@ -130,41 +107,13 @@ class Base(data.Dataset):
 
 class Crowd_qnrf(Base):
     def __init__(self, root_path, crop_size,
-                 downsample_ratio=4,
-                 method='train'):
-        super().__init__(root_path, crop_size, 4)
-        self.method = method
-        self.im_list = sorted(glob(os.path.join(self.root_path, '*.jpg')))
-        print('number of img: {}'.format(len(self.im_list)))
-        if method not in ['train', 'val']:
-            raise Exception("not implement")
-
-    def __len__(self):
-        return len(self.im_list)
-
-    def __getitem__(self, item):
-        img_path = self.im_list[item]
-        gd_path = img_path.replace('jpg', 'npy')
-        img = Image.open(img_path).convert('RGB')
-        if self.method == 'train':
-            keypoints = np.load(gd_path)
-            return self.train_transform(img, keypoints)
-        elif self.method == 'val':
-            keypoints = np.load(gd_path)
-            img = self.trans(img)
-            name = os.path.basename(img_path).split('.')[0]
-            return img, len(keypoints), name
-
-class Crowd_nwpu(Base):
-    def __init__(self, root_path, crop_size,
                  downsample_ratio=8,
                  method='train'):
-        super().__init__(root_path, crop_size, downsample_ratio)
+        super().__init__(root_path, crop_size, 8)
         self.method = method
         self.im_list = sorted(glob(os.path.join(self.root_path, '*.jpg')))
         print('number of img: {}'.format(len(self.im_list)))
-
-        if method not in ['train', 'val', 'test']:
+        if method not in ['train', 'val','test']:
             raise Exception("not implement")
 
     def __len__(self):
@@ -174,22 +123,17 @@ class Crowd_nwpu(Base):
         img_path = self.im_list[item]
         gd_path = img_path.replace('jpg', 'npy')
         img = Image.open(img_path).convert('RGB')
+        keypoints = np.load(gd_path)
+        
         if self.method == 'train':
-            keypoints = np.load(gd_path)
             return self.train_transform(img, keypoints)
         elif self.method == 'val':
-            keypoints = np.load(gd_path)
             img = self.trans(img)
             name = os.path.basename(img_path).split('.')[0]
             return img, len(keypoints), name
-        elif self.method == 'test':
-            img = self.trans(img)
-            name = os.path.basename(img_path).split('.')[0]
-            return img, name
+
 
 class Crowd_sh(Base):
-    
-
     def __init__(self, root_path, crop_size, downsample_ratio=8, method='train'):
         super().__init__(root_path, crop_size, downsample_ratio)
         self.method = method
@@ -239,14 +183,14 @@ class Crowd_jhu(Base):
         img_path = self.im_list[item]                
         gd_path = img_path.replace('jpg', 'txt').replace('images', 'gt')
         img = Image.open(img_path).convert('RGB')
+        keypoints = np.load(gd_path)
+
         if self.method == 'train':
-            keypoints = np.load(gd_path)
             return self.train_transform(img, keypoints)
         elif self.method == 'val':
-            #keypoints = np.load(gd_path)
             img = self.trans(img)
             name = os.path.basename(img_path).split('.')[0]
-            return img, 0, name
+            return img, len(keypoints), name
 
 
 class Crowd_cc50(Base):
